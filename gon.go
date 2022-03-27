@@ -63,6 +63,27 @@ func (p *parser) isWhitespace() bool {
 	return p.buffer[p.index] == ' ' || p.buffer[p.index] == '\n' || p.buffer[p.index] == '\t' || p.buffer[p.index] == '\r'
 }
 
+func (p *parser) isAlphanumeric() bool {
+	return !p.isWhitespace() && p.buffer[p.index] != '{' && p.buffer[p.index] != '}' && p.buffer[p.index] != '[' && p.buffer[p.index] != ']'
+}
+
+func (p *parser) handleTokenKeyword(index int, offset int, keyword string, kind tokenType) token {
+	keyword, keywordIndex := keyword[offset:], 0
+	for p.index < len(p.buffer) && p.isAlphanumeric() {
+		if keywordIndex < len(keyword) && p.buffer[p.index] == keyword[keywordIndex] {
+			keywordIndex++
+		} else {
+			keywordIndex = 100
+		}
+		p.index++
+	}
+
+	if keywordIndex == len(keyword) {
+		return token{literal: keyword, kind: kind}
+	}
+	return token{literal: p.buffer[index:p.index]}
+}
+
 func (p *parser) nextToken() token {
 	// skip whitespace
 	for p.index < len(p.buffer) && p.isWhitespace() {
@@ -104,37 +125,13 @@ func (p *parser) nextToken() token {
 
 	// consider this as an in-memory trie
 	case 't':
-		truth, truthIndex := "rue", 0
-		for p.index < len(p.buffer) && !p.isWhitespace() && p.buffer[p.index] != '{' && p.buffer[p.index] != '}' && p.buffer[p.index] != '[' && p.buffer[p.index] != ']' {
-			if truthIndex < len(truth) && p.buffer[p.index] == truth[truthIndex] {
-				truthIndex++
-			} else {
-				truthIndex = 100
-			}
-			p.index++
-		}
-
-		if truthIndex == len(truth) {
-			return token{literal: "true", kind: trueKeyword}
-		}
+		return p.handleTokenKeyword(index, 1, "true", trueKeyword)
 
 	case 'f':
-		falsy, falsyIndex := "alse", 0
-		for p.index < len(p.buffer) && !p.isWhitespace() && p.buffer[p.index] != '{' && p.buffer[p.index] != '}' && p.buffer[p.index] != '[' && p.buffer[p.index] != ']' {
-			if falsyIndex < len(falsy) && p.buffer[p.index] == falsy[falsyIndex] {
-				falsyIndex++
-			} else {
-				falsyIndex = 100
-			}
-			p.index++
-		}
-
-		if falsyIndex == len(falsy) {
-			return token{literal: "false", kind: falseKeyword}
-		}
+		return p.handleTokenKeyword(index, 1, "false", falseKeyword)
 
 	default:
-		for p.index < len(p.buffer) && !p.isWhitespace() && p.buffer[p.index] != '{' && p.buffer[p.index] != '}' && p.buffer[p.index] != '[' && p.buffer[p.index] != ']' {
+		for p.index < len(p.buffer) && p.isAlphanumeric() {
 			p.index++
 		}
 	}
