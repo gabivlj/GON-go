@@ -1,6 +1,6 @@
 # GON in Go
 
-File format created by Tyler Glaiel ([https://github.com/TylerGlaiel/GON](source)).
+File format created by Tyler Glaiel ([source](https://github.com/TylerGlaiel/GON)).
 
 ## What it does
 
